@@ -39,14 +39,16 @@ canvas{position:fixed;inset:0;display:block;touch-action:none}
   <p class="b">Que cada año a mi lado florezcas más bonita que el anterior.</p>
   <p class="c">Feliz cumpleaños, mi cachetona 🌷</p>
 </div>
+<div id="lb" style="position:fixed;inset:0;background:#14061ff0;display:none;align-items:center;justify-content:center;z-index:9"><img alt="" style="max-width:92vw;max-height:88vh;border-radius:12px;box-shadow:0 0 60px #ff4f8b66"></div>
 <script>
 const $=s=>document.querySelector(s);
 let G=null,stage='count',px=0,py=0,heartT=0;
 addEventListener('pointermove',e=>{px=e.clientX/innerWidth*2-1;py=e.clientY/innerHeight*2-1});
 addEventListener('pointerdown',e=>{
+  if(e.target.closest('#lb')){$('#lb').style.display='none';return}
   if(e.target.id==='skip')return;
   if(stage==='env'){stage='opening';$('#hint').style.opacity=0;if(!G)finale()}
-  else if(stage==='final'&&G)G.burst();
+  else if(stage==='final'&&G){const u=G.pick(e.clientX,e.clientY);if(u){$('#lb img').src=u;$('#lb').style.display='flex'}else G.burst()}
 });
 function startEnv(){stage='env';$('#count').style.opacity=0;setTimeout(()=>$('#count').remove(),1000);G&&G.showEnv();$('#hint').style.opacity=1}
 function finale(){
@@ -133,9 +135,18 @@ function boom(){
 }
 let tgt=gal,ry=0,open=0,last=0;
 const ease=x=>x<0?0:x>1?1:x*x*(3-2*x);
+const FOTOS=['fotos/1.jpg','fotos/2.jpg','fotos/3.jpg','fotos/4.jpg','fotos/5.jpg','fotos/6.jpg','fotos/7.jpg','fotos/8.jpg','fotos/9.jpg','fotos/10.jpg','fotos/11.jpg','fotos/12.jpg','fotos/13.jpg','fotos/14.jpg'],ring=new THREE.Group(),pl=[];let pt0=0;
+ring.position.y=1.4;ring.visible=false;scene.add(ring);
+FOTOS.forEach((u,i)=>new THREE.TextureLoader().load(u,tex=>{
+  const ar=tex.image.width/tex.image.height,W=ar>1?1.9:1.9*ar,H=ar>1?1.9/ar:1.9,g=new THREE.Group();
+  const fr=new THREE.Mesh(new THREE.PlaneGeometry(W+.16,H+.16),new THREE.MeshBasicMaterial({color:0xfff1f6,transparent:true,opacity:0}));fr.position.z=-.01;
+  const ph=new THREE.Mesh(new THREE.PlaneGeometry(W,H),new THREE.MeshBasicMaterial({map:tex,transparent:true,opacity:0}));
+  g.add(fr,ph);g.userData={a:i/FOTOS.length*6.2832,u,o:0};g.scale.setScalar(.01);ring.add(g);pl.push(g)}));
 G={
+  pick(x,y){if(!ring.visible)return null;const rc=new THREE.Raycaster();rc.setFromCamera(new THREE.Vector2(x/innerWidth*2-1,-(y/innerHeight)*2+1),cam);
+    const hit=rc.intersectObjects(pl.filter(g=>g.userData.o>.6).map(g=>g.children[1]));return hit.length?hit[0].object.parent.userData.u:null},
   showEnv(){env.visible=true},
-  heart(){tgt=hrt;ry=((ry+Math.PI)%(2*Math.PI))-Math.PI},
+  heart(){tgt=hrt;ry=((ry+Math.PI)%(2*Math.PI))-Math.PI;ring.visible=true;pt0=performance.now()},
   boom,
   burst(){for(let i=0;i<N;i++){const a=Math.random()*6.283,b=Math.acos(2*Math.random()-1),s=.25+Math.random()*.4,j=i*3;
     vel[j]=Math.sin(b)*Math.cos(a)*s;vel[j+1]=Math.sin(b)*Math.sin(a)*s;vel[j+2]=Math.cos(b)*s}
@@ -169,6 +180,14 @@ function loop(ts){
     for(let i=0;i<f.p.length;i+=3){f.p[i]+=f.v[i]*dt;f.p[i+1]+=f.v[i+1]*dt;f.p[i+2]+=f.v[i+2]*dt;f.v[i+1]-=2.5*dt;f.v[i]*=.985;f.v[i+2]*=.985}
     f.o.geometry.attributes.position.needsUpdate=true;f.o.material.opacity=Math.max(0,1-f.age/1.8);
     if(f.age>1.8){scene.remove(f.o);f.o.geometry.dispose();f.o.material.dispose();fw.splice(j,1)}
+  }
+  if(ring.visible){
+    const R=cam.aspect<1?5.6:7,since=(performance.now()-pt0)/1000;
+    pl.forEach(g=>{const d=g.userData,a=d.a+t*.14;
+      g.position.set(Math.cos(a)*R,Math.sin(d.a*2+t*.5)*.5,Math.sin(a)*R*.8);
+      g.quaternion.copy(cam.quaternion);
+      if(since>5+d.a*.5)d.o=Math.min(1,d.o+dt*.6);
+      g.scale.setScalar(.01+.99*ease(d.o));g.children[0].material.opacity=g.children[1].material.opacity=d.o});
   }
   ren.render(scene,cam);
 }
