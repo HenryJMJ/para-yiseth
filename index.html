@@ -15,7 +15,6 @@ canvas{position:fixed;inset:0;display:block;touch-action:none}
 #clock{display:flex;gap:14px;font-size:clamp(26px,8vw,44px);font-weight:300}
 #clock span{display:flex;flex-direction:column;align-items:center;min-width:2.2ch}
 #clock small{font-size:13px;opacity:.6;font-style:normal}
-#skip{pointer-events:auto;background:none;border:1px solid #ffffff44;color:#ffffff99;border-radius:20px;padding:8px 16px;font:inherit;font-size:13px;margin-top:20px}
 #hint{bottom:calc(9vh + env(safe-area-inset-bottom,0px));font-family:'Caveat',cursive;font-size:26px;color:var(--gold);opacity:0;transition:opacity 1s}
 #msg{bottom:calc(6vh + env(safe-area-inset-bottom,0px));padding-top:30vh;background:linear-gradient(transparent,#14061fcc 45%)}
 #msg p{margin:0 0 14px;opacity:0;transform:translateY(10px);transition:opacity 1.6s,transform 1.6s;text-shadow:0 2px 14px #14061f}
@@ -29,9 +28,8 @@ canvas{position:fixed;inset:0;display:block;touch-action:none}
 <body>
 <div id="count" class="layer">
   <p>falta poquito para tu día</p>
-  <h1>Yiseth</h1>
+  <h1>Mi amor</h1>
   <div id="clock"></div>
-  <button id="skip">abrir ya</button>
 </div>
 <div id="hint" class="layer">toca el sobre</div>
 <div id="msg" class="layer">
@@ -46,7 +44,6 @@ let G=null,stage='count',px=0,py=0,heartT=0;
 addEventListener('pointermove',e=>{px=e.clientX/innerWidth*2-1;py=e.clientY/innerHeight*2-1});
 addEventListener('pointerdown',e=>{
   if(e.target.closest('#lb')){$('#lb').style.display='none';return}
-  if(e.target.id==='skip')return;
   if(stage==='env'){stage='opening';$('#hint').style.opacity=0;if(!G)finale()}
   else if(stage==='final'&&G){const u=G.pick(e.clientX,e.clientY);if(u){$('#lb img').src=u;$('#lb').style.display='flex'}else G.burst()}
 });
@@ -67,7 +64,6 @@ function tick(){
   $('#clock').innerHTML=f.map(([l,m])=>{const v=Math.floor(r/m);r-=v*m;return `<span>${String(v).padStart(2,'0')}<small>${l}</small></span>`}).join('');
 }
 tick();setInterval(tick,500);
-$('#skip').onclick=startEnv;
 </script>
 <script>/**
  * @license
